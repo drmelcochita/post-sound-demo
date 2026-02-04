@@ -3,60 +3,142 @@
 <head>
   <meta charset="UTF-8">
   <title>Sound Design A/B Demo</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+
   <style>
-    body { font-family: sans-serif; text-align: center; background: #111; color: #fff; }
-    video { width: 80%; max-width: 900px; margin-top: 20px; }
-    button { margin-top: 15px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    body {
+      background: #111111;
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 960px;
+      width: 100%;
+      text-align: center;
+    }
+
+    h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      color: #ffffff;
+      letter-spacing: 0.1em;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .description {
+      font-size: 14px;
+      color: #cfcfcf;
+      margin-bottom: 20px;
+    }
+
+    video {
+      width: 100%;
+      max-width: 960px;
+      aspect-ratio: 16 / 9;
+      background: black;
+    }
+
+    button {
+      margin-top: 18px;
+      font-family: 'Bebas Neue', sans-serif;
+      letter-spacing: 0.15em;
+      font-size: 14px;
+      background: #ffffff;
+      color: #111111;
+      border: none;
+      padding: 10px 26px;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
   </style>
 </head>
+
 <body>
 
-<h2>Sound Design A/B Demo</h2>
+  <div class="container">
 
-<video id="video" src="video.mp4" controls></video>
+    <h2>SOUND DESIGN A / B</h2>
+    <div class="description">
+      Toggle to compare production audio and final sound design.
+    </div>
 
-<br>
-<button id="toggle">Sound Design: OFF</button>
+    <video id="video" src="video.mp4" controls playsinline></video>
 
-<script>
-const video = document.getElementById("video");
-const toggle = document.getElementById("toggle");
+    <button id="toggle">SOUND DESIGN OFF</button>
 
-const before = new Audio("before.mp3");
-const after = new Audio("after.mp3");
+  </div>
 
-let usingAfter = false;
+  <script>
+    const video = document.getElementById("video");
+    const toggle = document.getElementById("toggle");
 
-video.addEventListener("play", () => {
-  before.currentTime = video.currentTime;
-  after.currentTime = video.currentTime;
-  (usingAfter ? after : before).play();
-});
+    const before = new Audio("before.mp3");
+    const after = new Audio("after.mp3");
 
-video.addEventListener("pause", () => {
-  before.pause();
-  after.pause();
-});
+    before.volume = 1;
+    after.volume = 0;
 
-video.addEventListener("seeked", () => {
-  before.currentTime = video.currentTime;
-  after.currentTime = video.currentTime;
-});
+    let usingAfter = false;
+    let fadeInterval = null;
 
-toggle.addEventListener("click", () => {
-  usingAfter = !usingAfter;
-  before.pause();
-  after.pause();
+    function crossfade(toAfter) {
+      clearInterval(fadeInterval);
+      const duration = 150;
+      const steps = 15;
+      let step = 0;
 
-  const active = usingAfter ? after : before;
-  active.currentTime = video.currentTime;
-  active.play();
+      fadeInterval = setInterval(() => {
+        step++;
+        const t = step / steps;
 
-  toggle.textContent = usingAfter
-    ? "Sound Design: ON"
-    : "Sound Design: OFF";
-});
-</script>
+        before.volume = toAfter ? 1 - t : t;
+        after.volume  = toAfter ? t : 1 - t;
+
+        if (step >= steps) {
+          clearInterval(fadeInterval);
+          before.volume = toAfter ? 0 : 1;
+          after.volume  = toAfter ? 1 : 0;
+        }
+      }, duration / steps);
+    }
+
+    video.addEventListener("play", () => {
+      before.currentTime = video.currentTime;
+      after.currentTime = video.currentTime;
+      before.play();
+      after.play();
+    });
+
+    video.addEventListener("pause", () => {
+      before.pause();
+      after.pause();
+    });
+
+    video.addEventListener("seeked", () => {
+      before.currentTime = video.currentTime;
+      after.currentTime = video.currentTime;
+    });
+
+    toggle.addEventListener("click", () => {
+      usingAfter = !usingAfter;
+      crossfade(usingAfter);
+      toggle.textContent = usingAfter
+        ? "SOUND DESIGN ON"
+        : "SOUND DESIGN OFF";
+    });
+  </script>
 
 </body>
 </html>
