@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sound Design A/B Demo</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #111; color: #fff; }
+    video { width: 80%; max-width: 900px; margin-top: 20px; }
+    button { margin-top: 15px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<h2>Sound Design A/B Demo</h2>
+
+<video id="video" src="video.mp4" controls></video>
+
+<br>
+<button id="toggle">Sound Design: OFF</button>
+
+<script>
+const video = document.getElementById("video");
+const toggle = document.getElementById("toggle");
+
+const before = new Audio("before.mp3");
+const after = new Audio("after.mp3");
+
+let usingAfter = false;
+
+video.addEventListener("play", () => {
+  before.currentTime = video.currentTime;
+  after.currentTime = video.currentTime;
+  (usingAfter ? after : before).play();
+});
+
+video.addEventListener("pause", () => {
+  before.pause();
+  after.pause();
+});
+
+video.addEventListener("seeked", () => {
+  before.currentTime = video.currentTime;
+  after.currentTime = video.currentTime;
+});
+
+toggle.addEventListener("click", () => {
+  usingAfter = !usingAfter;
+  before.pause();
+  after.pause();
+
+  const active = usingAfter ? after : before;
+  active.currentTime = video.currentTime;
+  active.play();
+
+  toggle.textContent = usingAfter
+    ? "Sound Design: ON"
+    : "Sound Design: OFF";
+});
+</script>
+
+</body>
+</html>
