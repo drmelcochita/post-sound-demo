@@ -144,9 +144,15 @@ function stopAudio() {
 }
 
 overlay.addEventListener("click", async () => {
-  // Create AudioContext INSIDE tap
   audioContext = new (window.AudioContext || window.webkitAudioContext)();
   await audioContext.resume();
+
+  // 🔒 Play a silent buffer to lock audio on iOS
+  const silentBuffer = audioContext.createBuffer(1, 1, 22050);
+  const silentSource = audioContext.createBufferSource();
+  silentSource.buffer = silentBuffer;
+  silentSource.connect(audioContext.destination);
+  silentSource.start(0);
 
   await loadBuffers();
 
