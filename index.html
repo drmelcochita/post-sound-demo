@@ -80,65 +80,48 @@
 
   </div>
 
-  <script>
-    const video = document.getElementById("video");
-    const toggle = document.getElementById("toggle");
+ <script>
+  const video = document.getElementById("video");
+  const toggle = document.getElementById("toggle");
 
-    const before = new Audio("before.mp3");
-    const after = new Audio("after.mp3");
+  const before = new Audio("before.mp3");
+  const after = new Audio("after.mp3");
 
-    before.volume = 1;
-    after.volume = 0;
+  let usingAfter = false;
 
-    let usingAfter = false;
-    let fadeInterval = null;
+  function syncAndPlay(activeAudio) {
+    before.pause();
+    after.pause();
 
-    function crossfade(toAfter) {
-      clearInterval(fadeInterval);
-      const duration = 150;
-      const steps = 15;
-      let step = 0;
+    activeAudio.currentTime = video.currentTime;
+    activeAudio.play();
+  }
 
-      fadeInterval = setInterval(() => {
-        step++;
-        const t = step / steps;
+  video.addEventListener("play", () => {
+    syncAndPlay(usingAfter ? after : before);
+  });
 
-        before.volume = toAfter ? 1 - t : t;
-        after.volume  = toAfter ? t : 1 - t;
+  video.addEventListener("pause", () => {
+    before.pause();
+    after.pause();
+  });
 
-        if (step >= steps) {
-          clearInterval(fadeInterval);
-          before.volume = toAfter ? 0 : 1;
-          after.volume  = toAfter ? 1 : 0;
-        }
-      }, duration / steps);
-    }
+  video.addEventListener("seeked", () => {
+    const active = usingAfter ? after : before;
+    active.currentTime = video.currentTime;
+  });
 
-    video.addEventListener("play", () => {
-      before.currentTime = video.currentTime;
-      after.currentTime = video.currentTime;
-      before.play();
-      after.play();
-    });
+  toggle.addEventListener("click", () => {
+    usingAfter = !usingAfter;
 
-    video.addEventListener("pause", () => {
-      before.pause();
-      after.pause();
-    });
+    const active = usingAfter ? after : before;
+    syncAndPlay(active);
 
-    video.addEventListener("seeked", () => {
-      before.currentTime = video.currentTime;
-      after.currentTime = video.currentTime;
-    });
-
-    toggle.addEventListener("click", () => {
-      usingAfter = !usingAfter;
-      crossfade(usingAfter);
-      toggle.textContent = usingAfter
-        ? "SOUND DESIGN ON"
-        : "SOUND DESIGN OFF";
-    });
-  </script>
+    toggle.textContent = usingAfter
+      ? "SOUND DESIGN ON"
+      : "SOUND DESIGN OFF";
+  });
+</script>
 
 </body>
 </html>
