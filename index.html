@@ -64,9 +64,26 @@ button:hover {
   <h2>Sound Design Comparison</h2>
   <div class="description">Toggle to compare original production audio with full sound design</div>
 
- <video id="video" controls playsinline muted>
-  <source src="video.mp4" type="video/mp4">
-</video>
+<div style="position: relative;">
+  <video id="video" controls playsinline muted>
+    <source src="video.mp4" type="video/mp4">
+  </video>
+
+  <div id="startOverlay" style="
+    position:absolute;
+    inset:0;
+    background:#111111;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-family:'Bebas Neue', sans-serif;
+    font-size:28px;
+    letter-spacing:1px;
+  ">
+    TAP TO START
+  </div>
+</div>
 
   <button id="toggle">SOUND DESIGN OFF</button>
 </div>
@@ -74,6 +91,7 @@ button:hover {
 <script>
 const video = document.getElementById("video");
 const toggle = document.getElementById("toggle");
+const overlay = document.getElementById("startOverlay");
 
 let audioContext;
 let beforeBuffer, afterBuffer;
@@ -83,9 +101,7 @@ let beforeGain, afterGain;
 let usingAfter = false;
 let started = false;
 
-async function initAudio() {
-  audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
+async function loadBuffers() {
   const load = async (url) => {
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
@@ -127,19 +143,23 @@ function stopAudio() {
   started = false;
 }
 
-async function unlockAndStart() {
-  if (!audioContext) {
-    await initAudio();
-  }
-
+overlay.addEventListener("click", async () => {
+  // Create AudioContext INSIDE tap
+  audioContext = new (window.AudioContext || window.webkitAudioContext)();
   await audioContext.resume();
+
+  await loadBuffers();
+
+  overlay.style.display = "none";
+});
+
+video.addEventListener("play", () => {
+  if (!audioContext || !beforeBuffer) return;
 
   if (!started) {
     startAudio(video.currentTime);
   }
-}
-
-video.addEventListener("play", unlockAndStart);
+});
 
 video.addEventListener("pause", () => {
   stopAudio();
@@ -152,34 +172,24 @@ video.addEventListener("seeked", () => {
   }
 });
 
-toggle.addEventListener("click", async () => {
-  if (!audioContext) {
-    await unlockAndStart();
-  }
+toggle.addEventListener("click", () => {
+  if (!audioContext) return;
 
   usingAfter = !usingAfter;
 
   const now = audioContext.currentTime;
   const fadeTime = 0.15;
 
-  beforeGain.gain.cancelScheduledValues(now);
-  afterGain.gain.cancelScheduledValues(now);
+  beforeGain.gain.setValueAtTime(beforeGain.gain.value, now);
+  afterGain.gain.setValueAtTime(afterGain.gain.value, now);
 
   if (usingAfter) {
-    beforeGain.gain.setValueAtTime(beforeGain.gain.value, now);
-    afterGain.gain.setValueAtTime(afterGain.gain.value, now);
-
     beforeGain.gain.linearRampToValueAtTime(0, now + fadeTime);
     afterGain.gain.linearRampToValueAtTime(1, now + fadeTime);
-
     toggle.textContent = "SOUND DESIGN ON";
   } else {
-    beforeGain.gain.setValueAtTime(beforeGain.gain.value, now);
-    afterGain.gain.setValueAtTime(afterGain.gain.value, now);
-
     beforeGain.gain.linearRampToValueAtTime(1, now + fadeTime);
     afterGain.gain.linearRampToValueAtTime(0, now + fadeTime);
-
     toggle.textContent = "SOUND DESIGN OFF";
   }
 });
