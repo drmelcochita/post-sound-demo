@@ -64,9 +64,9 @@ button:hover {
   <h2>Sound Design Comparison</h2>
   <div class="description">Toggle to compare original production audio with full sound design</div>
 
-  <video id="video" controls>
-    <source src="video.mp4" type="video/mp4">
-  </video>
+ <video id="video" controls playsinline muted>
+  <source src="video.mp4" type="video/mp4">
+</video>
 
   <button id="toggle">SOUND DESIGN OFF</button>
 </div>
@@ -82,8 +82,6 @@ let beforeGain, afterGain;
 
 let usingAfter = false;
 let started = false;
-let startTime = 0;
-let pauseOffset = 0;
 
 async function initAudio() {
   audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -117,8 +115,6 @@ function startAudio(offset = 0) {
   beforeSource.connect(beforeGain);
   afterSource.connect(afterGain);
 
-  startTime = audioContext.currentTime - offset;
-
   beforeSource.start(0, offset);
   afterSource.start(0, offset);
 
@@ -131,7 +127,7 @@ function stopAudio() {
   started = false;
 }
 
-video.addEventListener("play", async () => {
+async function unlockAndStart() {
   if (!audioContext) {
     await initAudio();
   }
@@ -141,10 +137,11 @@ video.addEventListener("play", async () => {
   if (!started) {
     startAudio(video.currentTime);
   }
-});
+}
+
+video.addEventListener("play", unlockAndStart);
 
 video.addEventListener("pause", () => {
-  pauseOffset = audioContext.currentTime - startTime;
   stopAudio();
 });
 
@@ -155,24 +152,34 @@ video.addEventListener("seeked", () => {
   }
 });
 
-toggle.addEventListener("click", () => {
-  if (!audioContext) return;
+toggle.addEventListener("click", async () => {
+  if (!audioContext) {
+    await unlockAndStart();
+  }
 
   usingAfter = !usingAfter;
 
   const now = audioContext.currentTime;
-  const fadeTime = 0.12;
+  const fadeTime = 0.15;
 
   beforeGain.gain.cancelScheduledValues(now);
   afterGain.gain.cancelScheduledValues(now);
 
   if (usingAfter) {
+    beforeGain.gain.setValueAtTime(beforeGain.gain.value, now);
+    afterGain.gain.setValueAtTime(afterGain.gain.value, now);
+
     beforeGain.gain.linearRampToValueAtTime(0, now + fadeTime);
     afterGain.gain.linearRampToValueAtTime(1, now + fadeTime);
+
     toggle.textContent = "SOUND DESIGN ON";
   } else {
+    beforeGain.gain.setValueAtTime(beforeGain.gain.value, now);
+    afterGain.gain.setValueAtTime(afterGain.gain.value, now);
+
     beforeGain.gain.linearRampToValueAtTime(1, now + fadeTime);
     afterGain.gain.linearRampToValueAtTime(0, now + fadeTime);
+
     toggle.textContent = "SOUND DESIGN OFF";
   }
 });
