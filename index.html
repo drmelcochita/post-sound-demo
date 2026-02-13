@@ -1,8 +1,79 @@
-<video id="video" controls playsinline preload="auto">
-  <source src="Demo1_PS.mp4" type="video/mp4">
-</video>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sound Design Comparison</title>
 
-<button id="toggle">SOUND DESIGN OFF</button>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Bebas+Neue&display=swap" rel="stylesheet">
+
+<style>
+body {
+  background: #111111;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  color: #ffffff;
+  text-align: center;
+}
+
+.container {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 48px;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+
+.description {
+  color: #9a9a9a;
+  margin-bottom: 30px;
+  font-weight: 300;
+}
+
+video {
+  width: 100%;
+  height: auto;
+  background: black;
+}
+
+button {
+  margin-top: 25px;
+  padding: 12px 28px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 1px;
+  border: none;
+  cursor: pointer;
+  background: #ffffff;
+  color: #111111;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>Sound Design Comparison</h2>
+
+  <div class="description">
+    Toggle to compare original production audio with full sound design
+  </div>
+
+  <video id="video" controls playsinline preload="auto">
+    <source src="Demo1_PS.mp4" type="video/mp4">
+  </video>
+
+  <button id="toggle">SOUND DESIGN OFF</button>
+</div>
 
 <script>
 const video = document.getElementById("video");
@@ -31,3 +102,6 @@ toggle.addEventListener("click", () => {
     : "SOUND DESIGN OFF";
 });
 </script>
+
+</body>
+</html>
