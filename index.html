@@ -1,206 +1,33 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Sound Design Demo</title>
+<video id="video" controls playsinline preload="auto">
+  <source src="Demo1_PS.mp4" type="video/mp4">
+</video>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400&family=Bebas+Neue&display=swap" rel="stylesheet">
-
-<style>
-body {
-  background: #111111;
-  margin: 0;
-  font-family: 'Inter', sans-serif;
-  color: #ffffff;
-  text-align: center;
-}
-
-.container {
-  max-width: 900px;
-  margin: 60px auto;
-  padding: 0 20px;
-}
-
-h2 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 48px;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-}
-
-.description {
-  color: #9a9a9a;
-  margin-bottom: 30px;
-  font-weight: 300;
-}
-
-video {
-  width: 100%;
-  height: auto;
-  background: black;
-}
-
-button {
-  margin-top: 25px;
-  padding: 12px 28px;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 20px;
-  letter-spacing: 1px;
-  border: none;
-  cursor: pointer;
-  background: #ffffff;
-  color: #111111;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-  <h2>Sound Design Comparison</h2>
-  <div class="description">Toggle to compare original production audio with full sound design</div>
-
-<div style="position: relative;">
-  <video id="video" controls playsinline muted>
-    <source src="video.mp4" type="video/mp4">
-  </video>
-
-  <div id="startOverlay" style="
-    position:absolute;
-    inset:0;
-    background:#111111;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    font-family:'Bebas Neue', sans-serif;
-    font-size:28px;
-    letter-spacing:1px;
-  ">
-    TAP TO START
-  </div>
-</div>
-
-  <button id="toggle">SOUND DESIGN OFF</button>
-</div>
+<button id="toggle">SOUND DESIGN OFF</button>
 
 <script>
 const video = document.getElementById("video");
 const toggle = document.getElementById("toggle");
-const overlay = document.getElementById("startOverlay");
 
-let audioContext;
-let beforeBuffer, afterBuffer;
-let beforeSource, afterSource;
-let beforeGain, afterGain;
+let usingSD = false;
 
-let usingAfter = false;
-let started = false;
-
-async function loadBuffers() {
-  const load = async (url) => {
-    const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-    return await audioContext.decodeAudioData(arrayBuffer);
-  };
-
-  beforeBuffer = await load("before.mp3");
-  afterBuffer = await load("after.mp3");
-
-  beforeGain = audioContext.createGain();
-  afterGain = audioContext.createGain();
-
-  beforeGain.connect(audioContext.destination);
-  afterGain.connect(audioContext.destination);
-
-  beforeGain.gain.value = 1;
-  afterGain.gain.value = 0;
-}
-
-function startAudio(offset = 0) {
-  beforeSource = audioContext.createBufferSource();
-  afterSource = audioContext.createBufferSource();
-
-  beforeSource.buffer = beforeBuffer;
-  afterSource.buffer = afterBuffer;
-
-  beforeSource.connect(beforeGain);
-  afterSource.connect(afterGain);
-
-  beforeSource.start(0, offset);
-  afterSource.start(0, offset);
-
-  started = true;
-}
-
-function stopAudio() {
-  if (beforeSource) beforeSource.stop();
-  if (afterSource) afterSource.stop();
-  started = false;
-}
-
-overlay.addEventListener("click", async () => {
-  audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  await audioContext.resume();
-
-  await loadBuffers();
-
-  // 🔊 Start audio immediately at 0
-  startAudio(0);
-
-  // Immediately stop it (this "activates" audio session)
-  setTimeout(() => {
-    stopAudio();
-  }, 50);
-
-  overlay.style.display = "none";
-});
-
-video.addEventListener("play", () => {
-  if (!audioContext || !beforeBuffer) return;
-
-  if (!started) {
-    startAudio(video.currentTime);
-  }
-});
-
-video.addEventListener("pause", () => {
-  stopAudio();
-});
-
-video.addEventListener("seeked", () => {
-  if (started) {
-    stopAudio();
-    startAudio(video.currentTime);
-  }
-});
+const psSource = "Demo1_PS.mp4";
+const sdSource = "Demo1_SD.mp4";
 
 toggle.addEventListener("click", () => {
-  if (!audioContext) return;
+  const currentTime = video.currentTime;
+  const wasPaused = video.paused;
 
-  usingAfter = !usingAfter;
+  usingSD = !usingSD;
 
-  const now = audioContext.currentTime;
-  const fadeTime = 0.15;
+  video.src = usingSD ? sdSource : psSource;
+  video.currentTime = currentTime;
 
-  beforeGain.gain.setValueAtTime(beforeGain.gain.value, now);
-  afterGain.gain.setValueAtTime(afterGain.gain.value, now);
-
-  if (usingAfter) {
-    beforeGain.gain.linearRampToValueAtTime(0, now + fadeTime);
-    afterGain.gain.linearRampToValueAtTime(1, now + fadeTime);
-    toggle.textContent = "SOUND DESIGN ON";
-  } else {
-    beforeGain.gain.linearRampToValueAtTime(1, now + fadeTime);
-    afterGain.gain.linearRampToValueAtTime(0, now + fadeTime);
-    toggle.textContent = "SOUND DESIGN OFF";
+  if (!wasPaused) {
+    video.play();
   }
+
+  toggle.textContent = usingSD
+    ? "SOUND DESIGN ON"
+    : "SOUND DESIGN OFF";
 });
 </script>
-
-</body>
-</html>
